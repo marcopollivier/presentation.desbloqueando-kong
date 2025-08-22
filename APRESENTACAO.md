@@ -104,7 +104,7 @@ Demonstrar Kong Gateway de forma evolutiva, desde conceitos básicos até desenv
 ### Comandos Essenciais
 ```bash
 # Setup inicial
-cd kong-workshop
+cd .
 ./demo-all.sh
 
 # Projeto individual  

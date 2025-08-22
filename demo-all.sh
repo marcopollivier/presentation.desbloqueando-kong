@@ -7,7 +7,7 @@ echo "Este script executa uma demonstração de todos os projetos."
 echo "Pressione ENTER para continuar ou Ctrl+C para cancelar..."
 read
 
-WORKSHOP_DIR="/Users/U004334/dev/mpo/kong/kong-workshop"
+WORKSHOP_DIR="/Users/U004334/dev/mpo/kong"
 
 # Função para executar demonstração de um projeto
 demo_project() {
