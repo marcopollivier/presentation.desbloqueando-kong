@@ -1,0 +1,112 @@
+_format_version: "3.0"
+_transform: true
+
+# Consumers
+consumers:
+  - username: premium-user
+    custom_id: premium-001
+  - username: basic-user
+    custom_id: basic-001
+
+# Services
+services:
+  - name: jsonplaceholder-api
+    url: https://jsonplaceholder.typicode.com
+    protocol: https
+    host: jsonplaceholder.typicode.com
+    port: 443
+    path: /
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 5
+
+# Routes
+routes:
+  # Route com rate limiting básico por IP
+  - name: basic-rate-limit
+    service: jsonplaceholder-api
+    protocols: [http, https]
+    methods: [GET, POST]
+    paths: [/api]
+    strip_path: true
+    preserve_host: false
+    
+  # Route com rate limiting por consumer
+  - name: premium-route
+    service: jsonplaceholder-api
+    protocols: [http, https]
+    methods: [GET, POST]
+    paths: [/premium]
+    strip_path: true
+    preserve_host: false
+    
+  # Route com rate limiting por header
+  - name: client-route
+    service: jsonplaceholder-api
+    protocols: [http, https]
+    methods: [GET, POST]
+    paths: [/client]
+    strip_path: true
+    preserve_host: false
+    
+  # Route com request size limiting
+  - name: size-limited-route
+    service: jsonplaceholder-api
+    protocols: [http, https]
+    methods: [GET, POST]
+    paths: [/size-limit]
+    strip_path: true
+    preserve_host: false
+
+# Plugins
+plugins:
+  # Rate Limiting básico por IP - 5 requests por minuto
+  - name: rate-limiting
+    route: basic-rate-limit
+    config:
+      minute: 5
+      hour: 100
+      policy: local
+      hide_client_headers: false
+      
+  # Key Auth para route premium
+  - name: key-auth
+    route: premium-route
+    config:
+      key_names: [apikey]
+      
+  # Rate Limiting por consumer no route premium
+  - name: rate-limiting
+    route: premium-route
+    config:
+      minute: 10  # Premium users get more requests
+      hour: 500
+      policy: local
+      hide_client_headers: false
+      
+  # Rate Limiting por header personalizado
+  - name: rate-limiting
+    route: client-route
+    config:
+      minute: 8
+      hour: 200
+      policy: local
+      limit_by: header
+      header_name: X-Client-ID
+      hide_client_headers: false
+      
+  # Request Size Limiting - máximo 1KB
+  - name: request-size-limiting
+    route: size-limited-route
+    config:
+      allowed_payload_size: 1024  # 1KB
+      size_unit: bytes
+      require_content_length: false
+
+# Key Auth credentials
+keyauth_credentials:
+  - consumer: premium-user
+    key: premium-key-456
+  - consumer: basic-user  
+    key: basic-key-123
