@@ -1,0 +1,88 @@
+_format_version: "3.0"
+_transform: true
+
+# Consumer definitions
+consumers:
+  - username: demo-user
+    custom_id: user-001
+  - username: jwt-user
+    custom_id: user-002
+
+# Services
+services:
+  - name: jsonplaceholder-api
+    url: https://jsonplaceholder.typicode.com
+    protocol: https
+    host: jsonplaceholder.typicode.com
+    port: 443
+    path: /
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 5
+
+# Routes
+routes:
+  # Route protegido com Key Auth
+  - name: api-route-protected
+    service: jsonplaceholder-api
+    protocols:
+      - http
+      - https
+    methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+    paths:
+      - /api
+    strip_path: true
+    preserve_host: false
+    
+  # Route protegido com JWT
+  - name: jwt-route-protected
+    service: jsonplaceholder-api
+    protocols:
+      - http
+      - https
+    methods:
+      - GET
+      - POST
+    paths:
+      - /jwt
+    strip_path: true
+    preserve_host: false
+
+# Plugins
+plugins:
+  # Key Authentication no route /api
+  - name: key-auth
+    route: api-route-protected
+    config:
+      key_names:
+        - apikey
+        - X-API-KEY
+      key_in_header: true
+      key_in_query: true
+      hide_credentials: false
+      
+  # JWT Authentication no route /jwt  
+  - name: jwt
+    route: jwt-route-protected
+    config:
+      uri_param_names:
+        - jwt
+      key_claim_name: iss
+      secret_is_base64: false
+
+# Key Auth credentials
+keyauth_credentials:
+  - consumer: demo-user
+    key: my-secret-key-123
+    
+# JWT credentials  
+jwt_secrets:
+  - consumer: jwt-user
+    key: jwt-issuer-key
+    secret: my-jwt-secret-key
