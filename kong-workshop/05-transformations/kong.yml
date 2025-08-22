@@ -1,0 +1,60 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: jsonplaceholder-api
+    url: https://jsonplaceholder.typicode.com
+    protocol: https
+    host: jsonplaceholder.typicode.com
+    port: 443
+    path: /
+
+routes:
+  - name: transform-route
+    service: jsonplaceholder-api
+    protocols: [http, https]
+    methods: [GET, POST, PUT, PATCH, DELETE]
+    paths: [/api]
+    strip_path: true
+
+plugins:
+  # Request Transformer - adiciona headers e correlation ID
+  - name: request-transformer
+    route: transform-route
+    config:
+      add:
+        headers:
+          - "X-Forwarded-By:Kong-Gateway"
+          - "X-API-Version:v1"
+          - "X-Correlation-ID:$(uuid)"
+        querystring:
+          - "source:kong"
+      replace:
+        headers:
+          - "User-Agent:Kong-Gateway/3.4"
+      append:
+        headers:
+          - "X-Request-Time:$(current_time)"
+      remove:
+        headers:
+          - "X-Internal-Header"
+          
+  # Response Transformer - modifica responses
+  - name: response-transformer
+    route: transform-route  
+    config:
+      add:
+        headers:
+          - "X-Processed-By:Kong-Gateway"
+          - "X-Cache-Status:MISS"
+          - "X-Response-Time:$(current_time)"
+        json:
+          - "metadata.processed_at:$(current_time)"
+          - "metadata.server:kong"
+      replace:
+        headers:
+          - "Server:Kong-Gateway"
+      remove:
+        headers:
+          - "X-Powered-By"
+          - "X-RateLimit-Limit"
