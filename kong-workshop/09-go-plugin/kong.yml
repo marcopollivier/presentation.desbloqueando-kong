@@ -1,0 +1,22 @@
+_format_version: "3.0"
+
+services:
+  - name: test-service
+    url: http://httpbin:80
+    plugins:
+      - name: advanced-validator-go
+        config:
+          max_requests_per_minute: 100
+          required_headers:
+            - "Content-Type"
+          allowed_methods:
+            - "GET"
+            - "POST"
+            - "PUT"
+          enable_debug_headers: true
+    routes:
+      - name: test-route
+        hosts:
+          - api.local
+        paths:
+          - /api
