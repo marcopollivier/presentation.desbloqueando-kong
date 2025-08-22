@@ -107,7 +107,6 @@ func (conf Config) checkRateLimit(kong *pdk.PDK, clientIP string) bool {
 	pipe.Incr(ctx, key)
 	pipe.Expire(ctx, key, time.Minute)
 	_, err = pipe.Exec(ctx)
-
 	if err != nil {
 		kong.Log.Err("Failed to update rate limit counter: " + err.Error())
 		// Allow request if Redis operation fails

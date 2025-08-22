@@ -117,7 +117,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp: time.Now(),
 		Uptime:    uptime.String(),
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(health)
 }
@@ -179,22 +179,22 @@ func getUserHandler(w http.ResponseWriter, r *http.Request) {
 // Performance endpoint para benchmarks
 func performanceHandler(w http.ResponseWriter, r *http.Request) {
 	startReq := time.Now()
-	
+
 	// Simular algum processamento
 	sum := 0
 	for i := 0; i < 10000; i++ {
 		sum += i
 	}
-	
+
 	response := map[string]interface{}{
-		"server":           serverName,
-		"language":         "Go",
-		"processing_time":  time.Since(startReq).Nanoseconds(),
+		"server":          serverName,
+		"language":        "Go",
+		"processing_time": time.Since(startReq).Nanoseconds(),
 		"result":          sum,
 		"goroutines":      "available",
 		"timestamp":       time.Now(),
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
@@ -213,7 +213,7 @@ func main() {
 
 	// Criar router
 	r := mux.NewRouter()
-	
+
 	// Aplicar middleware
 	r.Use(corsAndLoggingMiddleware)
 
@@ -246,7 +246,7 @@ func main() {
 	}()
 
 	log.Printf("✅ Go Mock API Server \"%s\" is running on port %s", serverName, port)
-	
+
 	// Manter o servidor rodando
 	select {}
 }
