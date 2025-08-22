@@ -4,17 +4,26 @@ Este workshop apresenta Kong Gateway através de projetos progressivos, do bási
 
 ## Estrutura dos Projetos
 
-### 📚 Ordem Recomendada de Apresentação
+### 📚 Projetos do Workshop
 
-1. **[Projeto 1: Kong Básico](./01-basic-proxy/)** - Proxy simples e conceitos fundamentais
-2. **[Projeto 2: Autenticação](./02-authentication/)** - Key Auth e JWT
-3. **[Projeto 3: Rate Limiting](./03-rate-limiting/)** - Controle de tráfego
-4. **[Projeto 4: Load Balancing](./04-load-balancing/)** - Distribuição de carga multi-linguagem
-5. **[Projeto 5: Transformações](./05-transformations/)** - Manipulação de request/response
-6. **[Projeto 6: Observabilidade](./06-observability/)** - Logging e monitoramento
-7. **[Projeto 7: Plugin Customizado](./07-custom-plugin/)** - Plugin em Lua
-8. **[Projeto 8: Lua Deep Dive](./08-lua-deep-dive/)** - Por que Lua + Arquitetura Kong
-9. **[Projeto 9: Plugin em Go](./09-go-plugin/)** - Plugin usando Kong Go PDK
+### 🎯 Fundamentos
+0. **[Arquitetura Kong](./00-kong-architecture/)** - Componentes, fluxos e topologias
+
+### 🟢 Básico
+1. **[Proxy Básico](./01-basic-proxy/)** - Kong como proxy reverso
+2. **[Autenticação](./02-authentication/)** - Key Auth e JWT
+3. **[Rate Limiting](./03-rate-limiting/)** - Controle de tráfego
+4. **[Load Balancing](./04-load-balancing/)** - Distribuição de carga
+
+### 🟡 Intermediário  
+5. **[Transformações](./05-transformations/)** - Request/Response transforms
+6. **[Observabilidade](./06-observability/)** - Logging e monitoramento
+
+### 🔴 Avançado
+7. **[Plugin Customizado](./07-custom-plugin/)** - Plugin personalizado em Lua
+8. **[Lua Deep Dive](./08-lua-deep-dive/)** - Recursos avançados do Lua
+9. **[Go Plugin](./09-go-plugin/)** - Plugin em Go com Kong PDK
+10. **[Lua Embedding](./10-lua-embedding/)** - Por que Lua? Go + Lua na prática
 
 ## 🚀 Pré-requisitos
 
