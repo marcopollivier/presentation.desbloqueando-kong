@@ -40,10 +40,10 @@ upstreams:
 targets:
   - target: go-mock-api-1:3001
     upstream: api-upstream
-    weight: 100
+    weight: 50
   - target: node-mock-api-2:3002
     upstream: api-upstream  
-    weight: 100
+    weight: 50
 
 # Service using the upstream
 services:
