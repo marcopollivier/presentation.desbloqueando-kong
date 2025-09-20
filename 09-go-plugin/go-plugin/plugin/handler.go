@@ -2,125 +2,177 @@ package plugin
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 	"strings"
 	"time"
-
-	"github.com/Kong/go-pdk"
-	"github.com/go-redis/redis/v8"
 )
 
-var (
-	Version  = "1.0.0"
-	Priority = 1000
-)
+// ValidateHandler processa requisições de validação
+func (s *Server) ValidateHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
-// Access is called for every request that enters Kong
-func (conf Config) Access(kong *pdk.PDK) {
-	// Get request method
-	method, err := kong.Request.GetMethod()
-	if err != nil {
-		kong.Log.Err("Failed to get request method: " + err.Error())
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(ValidationResponse{
+			Valid:      false,
+			Error:      "Method not allowed",
+			StatusCode: 405,
+		})
 		return
 	}
 
-	// Validate allowed methods
-	if !contains(conf.AllowedMethods, method) {
-		kong.Log.Info(fmt.Sprintf("Method %s not allowed", method))
-		kong.Response.Exit(405, map[string]interface{}{
-			"error":   "Method not allowed",
-			"method":  method,
-			"allowed": conf.AllowedMethods,
-		}, nil)
+	// Decodificar request
+	var validationReq ValidationRequest
+	if err := json.NewDecoder(r.Body).Decode(&validationReq); err != nil {
+		log.Printf("Failed to decode validation request: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ValidationResponse{
+			Valid:      false,
+			Error:      "Invalid request format",
+			StatusCode: 400,
+		})
 		return
 	}
 
-	// Validate required headers
-	for _, headerName := range conf.RequiredHeaders {
-		headerValue, err := kong.Request.GetHeader(headerName)
-		if err != nil || headerValue == "" {
-			kong.Log.Info(fmt.Sprintf("Missing required header: %s", headerName))
-			kong.Response.Exit(400, map[string]interface{}{
-				"error":  "Missing required header",
-				"header": headerName,
-			}, nil)
-			return
+	// Executar validações
+	response := s.validateRequest(validationReq)
+
+	// Retornar resposta
+	if response.Valid {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusOK) // Sempre 200, o status real vai no body
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+// validateRequest executa todas as validações
+func (s *Server) validateRequest(req ValidationRequest) ValidationResponse {
+	// 1. Validar métodos permitidos
+	if !contains(req.Config.AllowedMethods, req.Method) {
+		return ValidationResponse{
+			Valid:      false,
+			Error:      "Method not allowed",
+			Reason:     fmt.Sprintf("Method %s is not in allowed methods", req.Method),
+			StatusCode: 405,
+			Details: map[string]interface{}{
+				"method":  req.Method,
+				"allowed": req.Config.AllowedMethods,
+			},
 		}
 	}
 
-	// Rate limiting check
-	clientIP, err := kong.Client.GetIp()
-	if err != nil {
-		kong.Log.Err("Failed to get client IP: " + err.Error())
-		clientIP = "unknown"
+	// 2. Validar headers obrigatórios
+	for _, requiredHeader := range req.Config.RequiredHeaders {
+		if !hasHeader(req.Headers, requiredHeader) {
+			return ValidationResponse{
+				Valid:      false,
+				Error:      "Missing required header",
+				Reason:     fmt.Sprintf("Required header '%s' is missing", requiredHeader),
+				StatusCode: 400,
+				Details: map[string]interface{}{
+					"missing_header":   requiredHeader,
+					"required_headers": req.Config.RequiredHeaders,
+				},
+			}
+		}
 	}
 
-	if !conf.checkRateLimit(kong, clientIP) {
-		kong.Log.Info(fmt.Sprintf("Rate limit exceeded for IP: %s", clientIP))
-		kong.Response.Exit(429, map[string]interface{}{
-			"error":  "Too many requests",
-			"limit":  conf.MaxRequestsPerMinute,
-			"window": "1 minute",
-		}, nil)
-		return
+	// 3. Rate limiting
+	if req.Config.MaxRequestsPerMinute > 0 {
+		if exceeded, details := s.checkRateLimit(req.ClientIP, req.Config.MaxRequestsPerMinute); exceeded {
+			return ValidationResponse{
+				Valid:      false,
+				Error:      "Rate limit exceeded",
+				Reason:     fmt.Sprintf("Too many requests from IP %s", req.ClientIP),
+				StatusCode: 429,
+				Details:    details,
+			}
+		}
 	}
 
-	// Add debug headers if enabled
-	if conf.EnableDebugHeaders {
-		kong.ServiceRequest.SetHeader("X-Plugin-Lang", "Go")
-		kong.ServiceRequest.SetHeader("X-Plugin-Version", Version)
-		kong.ServiceRequest.SetHeader("X-Validated-By", "advanced-validator-go")
-		kong.ServiceRequest.SetHeader("X-Client-IP", clientIP)
-		kong.ServiceRequest.SetHeader("X-Request-Method", method)
+	// Se chegou até aqui, a validação passou
+	debugInfo := map[string]interface{}{
+		"validated_method": req.Method,
+		"client_ip":        req.ClientIP,
+		"path":             req.Path,
 	}
 
-	kong.Log.Info("Request validated successfully by Go plugin")
+	if req.Config.EnableDebugHeaders {
+		debugInfo["timestamp"] = time.Now().Unix()
+		debugInfo["validator"] = "go-service"
+	}
+
+	return ValidationResponse{
+		Valid:     true,
+		DebugInfo: debugInfo,
+	}
 }
 
-// checkRateLimit implements rate limiting using Redis
-func (conf Config) checkRateLimit(kong *pdk.PDK, clientIP string) bool {
-	// Connect to Redis
-	rdb := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%d", conf.RedisHost, conf.RedisPort),
-		DB:   0,
-	})
-	defer rdb.Close()
-
+// checkRateLimit verifica o rate limiting usando Redis
+func (s *Server) checkRateLimit(clientIP string, maxRequests int) (bool, map[string]interface{}) {
 	ctx := context.Background()
 	key := fmt.Sprintf("rate_limit:%s", clientIP)
 
-	// Get current count
-	count, err := rdb.Get(ctx, key).Int()
-	if err != nil && err != redis.Nil {
-		kong.Log.Err("Redis error: " + err.Error())
-		// Allow request if Redis is unavailable
-		return true
+	// Obter contagem atual
+	count, err := s.redisClient.Get(ctx, key).Int()
+	if err != nil && err.Error() != "redis: nil" {
+		log.Printf("Redis error: %v", err)
+		// Em caso de erro no Redis, permitir a requisição
+		return false, map[string]interface{}{
+			"redis_error": err.Error(),
+		}
 	}
 
-	// Check if limit exceeded
-	if count >= conf.MaxRequestsPerMinute {
-		return false
+	// Verificar se excedeu o limite
+	if count >= maxRequests {
+		ttl, _ := s.redisClient.TTL(ctx, key).Result()
+		return true, map[string]interface{}{
+			"current_count": count,
+			"max_requests":  maxRequests,
+			"window":        "1 minute",
+			"reset_in":      ttl.Seconds(),
+		}
 	}
 
-	// Increment counter
-	pipe := rdb.TxPipeline()
+	// Incrementar contador
+	pipe := s.redisClient.TxPipeline()
 	pipe.Incr(ctx, key)
 	pipe.Expire(ctx, key, time.Minute)
 	_, err = pipe.Exec(ctx)
 	if err != nil {
-		kong.Log.Err("Failed to update rate limit counter: " + err.Error())
-		// Allow request if Redis operation fails
-		return true
+		log.Printf("Failed to update rate limit counter: %v", err)
 	}
 
-	return true
+	return false, map[string]interface{}{
+		"current_count": count + 1,
+		"max_requests":  maxRequests,
+		"window":        "1 minute",
+	}
 }
 
-// contains checks if a slice contains a specific string
+// contains verifica se um slice contém um item específico
 func contains(slice []string, item string) bool {
 	for _, s := range slice {
 		if strings.EqualFold(s, item) {
 			return true
+		}
+	}
+	return false
+}
+
+// hasHeader verifica se um header existe (case-insensitive)
+func hasHeader(headers map[string]interface{}, headerName string) bool {
+	for key, value := range headers {
+		if strings.EqualFold(key, headerName) {
+			// Verificar se o valor não está vazio
+			if str, ok := value.(string); ok && str != "" {
+				return true
+			}
 		}
 	}
 	return false

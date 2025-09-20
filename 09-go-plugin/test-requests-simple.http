@@ -1,0 +1,54 @@
+### Verificar saúde do Kong
+GET http://localhost:8001/status
+
+### Verificar saúde do serviço Go
+GET http://localhost:8002/health
+
+### Teste 1: Request válido
+GET http://localhost:8000/api/get
+Content-Type: application/json
+X-Client-ID: client-123
+
+### Teste 2: Header obrigatório ausente (deve falhar)
+GET http://localhost:8000/api/get
+
+### Teste 3: Request com método não permitido (se configurado)
+PATCH http://localhost:8000/api/get
+Content-Type: application/json
+X-Client-ID: client-123
+
+### Teste 4: POST request válido
+POST http://localhost:8000/api/post
+Content-Type: application/json
+X-Client-ID: client-456
+
+{
+  "name": "Test User",
+  "email": "test@example.com"
+}
+
+### Teste 5: Rate limiting - execute várias vezes para testar o limite
+GET http://localhost:8000/api/get
+Content-Type: application/json
+X-Client-ID: rate-test-user
+
+### Teste 6: PUT request válido
+PUT http://localhost:8000/api/put/1
+Content-Type: application/json
+X-Client-ID: client-789
+
+{
+  "name": "Updated User",
+  "email": "updated@example.com"
+}
+
+### Teste 7: DELETE request válido
+DELETE http://localhost:8000/api/delete/1
+Content-Type: application/json
+X-Client-ID: client-delete
+
+### Verificar status do Kong Admin API
+GET http://localhost:8001/plugins
+
+### Verificar configuração do plugin
+GET http://localhost:8001/services/test-service/plugins

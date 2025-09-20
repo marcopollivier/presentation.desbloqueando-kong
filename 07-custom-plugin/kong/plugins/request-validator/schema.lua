@@ -21,7 +21,6 @@ local schema = {
           { max_payload_size = {
               type = "number",
               default = 1048576, -- 1MB
-              gt = 0,
               description = "Maximum allowed payload size in bytes"
             }
           },
@@ -30,7 +29,6 @@ local schema = {
           { rate_limit_per_minute = {
               type = "number", 
               default = 5,
-              ge = 0,
               description = "Number of requests allowed per minute per user (0 = unlimited)"
             }
           },

@@ -19,7 +19,11 @@ end
 
 -- Função de rate limiting customizado por user-id
 local function check_rate_limit(config, user_id)
-  local current_time = ngx.time()
+  if not user_id or config.rate_limit_per_minute <= 0 then
+    return false, 0
+  end
+  
+  local current_time = os.time()
   local window_start = current_time - (current_time % 60) -- janela de 1 minuto
   local cache_key = user_id .. ":" .. window_start
   
@@ -44,6 +48,10 @@ end
 
 -- Fase de access - executada antes do request chegar ao upstream
 function RequestValidator:access(config)
+  -- Marcar o tempo de início do request
+  kong.ctx.shared.request_start_time = kong.table.new(0, 1)
+  kong.ctx.shared.request_start_time = os.clock()
+  
   local headers = kong.request.get_headers()
   local method = kong.request.get_method()
   
@@ -104,8 +112,8 @@ end
 
 -- Fase de log - executada após enviar response para o client
 function RequestValidator:log(config)
-  local request_time = kong.ctx.shared.request_time or ngx.now()
-  local response_time = ngx.now()
+  local request_time = kong.ctx.shared.request_start_time or os.clock()
+  local response_time = os.clock()
   local latency = math.floor((response_time - request_time) * 1000) -- em ms
   
   local user_id = kong.request.get_header("x-user-id") or "anonymous"
