@@ -1,0 +1,15 @@
+meta {
+  name: rate limit basic
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8000/api/posts
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: false
+}
