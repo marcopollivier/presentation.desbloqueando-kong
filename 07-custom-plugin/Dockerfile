@@ -1,4 +1,4 @@
-FROM kong:3.4-alpine
+FROM kong:latest
 
 # Copiar plugin customizado
 COPY kong/plugins/request-validator /usr/local/share/lua/5.1/kong/plugins/request-validator
