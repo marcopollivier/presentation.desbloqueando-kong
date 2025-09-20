@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   kong:
-    image: kong:3.4
+    image: kong:latest
     container_name: kong-lb
     environment:
       KONG_DATABASE: "off"
