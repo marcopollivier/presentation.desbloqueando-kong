@@ -1,0 +1,15 @@
+meta {
+  name: 01 - Status
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8001/status
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
