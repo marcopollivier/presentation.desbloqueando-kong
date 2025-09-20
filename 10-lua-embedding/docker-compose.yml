@@ -9,8 +9,8 @@ services:
       - ./go-lua-host:/app/go-lua-host
       - ./lua-scripts:/app/lua-scripts
       - ./examples:/app/examples
-    working_dir: /app/go-lua-host
-    command: ["go", "run", "main.go", "basic"]
+    working_dir: /app
+    command: ["./lua-embedding-demo", "basic"]
     environment:
       - CGO_ENABLED=0
       - GOOS=linux
@@ -26,7 +26,7 @@ services:
       - ./go-lua-host:/app/go-lua-host
       - ./lua-scripts:/app/lua-scripts
       - ./examples:/app/examples
-    working_dir: /app/go-lua-host
+    working_dir: /app
     command: ["tail", "-f", "/dev/null"]  # Manter container rodando
     environment:
       - CGO_ENABLED=0
