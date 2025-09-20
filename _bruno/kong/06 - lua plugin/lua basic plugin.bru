@@ -1,0 +1,20 @@
+meta {
+  name: lua basic plugin 
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8000/api/posts
+  body: none
+  auth: inherit
+}
+
+headers {
+  X-User-ID: user123
+  X-Client-Version: 1.0.0
+}
+
+settings {
+  encodeUrl: false
+}
