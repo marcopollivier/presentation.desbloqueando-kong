@@ -1,0 +1,12 @@
+FROM kong:latest
+
+USER root
+
+# Copy the pre-built Go plugin
+COPY simple-go-plugin /usr/local/bin/simple-go-plugin
+RUN chmod +x /usr/local/bin/simple-go-plugin
+
+# Create socket directory with proper permissions
+RUN mkdir -p /tmp && chmod 777 /tmp
+
+USER kong
