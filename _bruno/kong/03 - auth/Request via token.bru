@@ -1,0 +1,19 @@
+meta {
+  name: Request via token
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8000/jwt/posts
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJpc3MiOiAiand0LWlzc3Vlci1rZXkiLAogICJzdWIiOiAiand0LXVzZXIiLCAKICAiYXVkIjogImtvbmctYXBpIiwKICAiZXhwIjogMTc1ODM2NTQ3NywKICAiaWF0IjogMTc1ODM2MTg3NywKICAibmJmIjogMTc1ODM2MTg3Nwp9.xIYM3wQV25k9g276Eb4ztk_6GqXnbb_hOsia_qRU60k
+}
+
+settings {
+  encodeUrl: false
+}
