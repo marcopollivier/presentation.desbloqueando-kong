@@ -21,7 +21,7 @@ payload='{
 payload_b64=$(echo -n "$payload" | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n')
 
 # JWT Signature
-secret="my-jwt-secret-key"
+secret="my-jwt-secret-key-with-256-bits-minimum-length-required-by-kong"
 signature_input="$header_b64.$payload_b64"
 
 # Usando openssl para gerar assinatura HMAC SHA256

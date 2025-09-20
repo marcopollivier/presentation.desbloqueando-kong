@@ -85,4 +85,4 @@ keyauth_credentials:
 jwt_secrets:
   - consumer: jwt-user
     key: jwt-issuer-key
-    secret: my-jwt-secret-key
+    secret: my-jwt-secret-key-with-256-bits-minimum-length-required-by-kong
