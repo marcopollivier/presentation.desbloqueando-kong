@@ -109,7 +109,23 @@ Cada projeto possui:
 - **Coleção Bruno** - Requisições organizadas para teste em `_bruno/kong/`
 - **READMEs individuais** - Documentação específica de cada projeto
 
-## 🔗 Links Úteis
+## �️ Ferramentas de Desenvolvimento
+
+### Limpeza do Docker
+
+Para resetar completamente o ambiente Docker durante o desenvolvimento:
+
+```bash
+./docker-cleanup.sh          # Limpeza interativa com confirmação
+./docker-cleanup.sh --force  # Limpeza automática (sem confirmação)
+./docker-cleanup.sh --stats-only  # Apenas visualizar recursos atuais
+```
+
+📖 **Documentação completa**: [DOCKER-CLEANUP.md](./DOCKER-CLEANUP.md)
+
+⚠️ **Atenção**: Remove TODOS os recursos Docker do sistema (containers, imagens, volumes, redes)
+
+## �🔗 Links Úteis
 
 - [Kong Gateway Docs](https://docs.konghq.com/gateway/)
 - [Kong Plugin Development](https://docs.konghq.com/gateway/latest/plugin-development/)
