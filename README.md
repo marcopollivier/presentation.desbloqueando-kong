@@ -11,26 +11,24 @@ Demonstração prática e evolutiva do Kong Gateway, explorando desde proxy bás
 ### 🎢 Progressão de Aprendizado
 
 ```text
-Fundamentos (00)    → Básico (01-04)      → Avançado (05-08)
+Básico (01-04)      → Avançado (05-07)    → Observabilidade
       ↓                      ↓                      ↓
- Conceitos Lua      Proxy/Auth/Rate/LB    Plugins/Go/Teoria
+Proxy/Auth/Rate/LB   Plugins/Transform     Métricas/Grafana
 ```
 
 ### 📚 Projetos do Workshop
 
 | # | Projeto | Conceito Principal | Tecnologias | Duração |
 |---|---------|-------------------|-------------|---------|
-| **00** | **[Lua Embedding](./00-lua-embedding/)** | Por que Lua? Fundamentos | Go + gopher-lua | 15min |
 | **01** | **[Proxy Básico](./01-basic-proxy/)** | Kong como reverse proxy | Kong + nginx | 5min |
 | **02** | **[Load Balancing](./02-load-balancing/)** | Distribuição de carga | Kong + multi-upstream | 10min |
 | **03** | **[Autenticação](./03-authentication/)** | Key Auth + JWT | Kong + Auth plugins | 8min |
 | **04** | **[Rate Limiting](./04-rate-limiting/)** | Controle de tráfego | Kong + Redis | 7min |
 | **05** | **[Transformações](./05-transformations/)** | Request/Response transform | Kong + transform plugins | 8min |
 | **06** | **[Plugin Customizado](./06-custom-plugin/)** | Plugin Lua personalizado | Lua + Kong PDK | 15min |
-| **07** | **[Lua Deep Dive](./07-lua-deep-dive/)** | Recursos avançados Lua | OpenResty + LuaJIT | 12min |
-| **08** | **[Go Plugin](./08-go-plugin/)** | Plugin Go com PDK | Go + Kong Go PDK | 18min |
+| **07** | **[Métricas & Observability](./07-metrics/)** | Monitoramento completo | Prometheus + Grafana | 12min |
 
-> ⏱️ **Duração total estimada**: ~1h38min
+> ⏱️ **Duração total estimada**: ~1h5min
 
 ## 🧪 Coleção de Testes - Bruno
 
@@ -97,15 +95,17 @@ Cada projeto possui:
 
 ## 🎯 Fluxo Sugerido para Apresentação
 
-1. **Conceitos** (00): Comece com fundamentos do Lua e embedding
-2. **Básico** (01-04): Proxy, load balancing, auth e rate limiting
-3. **Avançado** (05-08): Transformações, plugins customizados e Go
-4. **Teoria** (07-08): Lua deep dive e comparação Go vs Lua
+1. **Básico** (01-04): Proxy, load balancing, auth e rate limiting
+2. **Avançado** (05-06): Transformações e plugins customizados em Lua
+3. **Observabilidade** (07): Métricas, Prometheus e Grafana
+4. **Demo Completa**: Execução com monitoramento em tempo real
 5. **Q&A**: Discussão sobre casos de uso reais
 
 ## 📖 Documentação Complementar
 
-- **[VISAO-GERAL.md](./VISAO-GERAL.md)** - Visão detalhada de todos os projetos
+- **[VISAO-GERAL.md](./docs/VISAO-GERAL.md)** - Visão detalhada de todos os projetos
+- **[DOCKER-CLEANUP.md](./docs/DOCKER-CLEANUP.md)** - Guia de limpeza do ambiente Docker
+- **[Observabilidade](./docs/)** - Documentação sobre monitoramento e métricas
 - **Coleção Bruno** - Requisições organizadas para teste em `_bruno/kong/`
 - **READMEs individuais** - Documentação específica de cada projeto
 
@@ -121,7 +121,7 @@ Para resetar completamente o ambiente Docker durante o desenvolvimento:
 ./docker-cleanup.sh --stats-only  # Apenas visualizar recursos atuais
 ```
 
-📖 **Documentação completa**: [DOCKER-CLEANUP.md](./DOCKER-CLEANUP.md)
+📖 **Documentação completa**: [DOCKER-CLEANUP.md](./docs/DOCKER-CLEANUP.md)
 
 ⚠️ **Atenção**: Remove TODOS os recursos Docker do sistema (containers, imagens, volumes, redes)
 
@@ -134,4 +134,4 @@ Para resetar completamente o ambiente Docker durante o desenvolvimento:
 
 ---
 
-**💡 Dica**: Comece pelo projeto `00-lua-embedding` para entender os fundamentos antes de partir para os exemplos práticos do Kong.
+**💡 Dica**: Comece pelo projeto `01-basic-proxy` para entender os conceitos fundamentais e siga a progressão numérica para uma experiência de aprendizado estruturada.
