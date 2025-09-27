@@ -1,0 +1,61 @@
+# Exemplos de diferentes pesos - TODOS com mesmo resultado
+
+# Exemplo 1: Balanceamento 50/50 com pesos baixos
+upstreams:
+  - name: upstream-1-1
+    algorithm: round-robin
+    targets:
+      - target: service-1:3001
+        weight: 1        # 50%
+      - target: service-2:3002
+        weight: 1        # 50%
+
+# Exemplo 2: Balanceamento 50/50 com pesos médios  
+upstreams:
+  - name: upstream-50-50
+    algorithm: round-robin
+    targets:
+      - target: service-1:3001
+        weight: 50       # 50%
+      - target: service-2:3002
+        weight: 50       # 50%
+
+# Exemplo 3: Balanceamento 50/50 com pesos altos
+upstreams:
+  - name: upstream-100-100
+    algorithm: round-robin
+    targets:
+      - target: service-1:3001
+        weight: 100      # 50%
+      - target: service-2:3002
+        weight: 100      # 50%
+
+# Exemplo 4: Distribuição 70/30
+upstreams:
+  - name: upstream-70-30
+    algorithm: round-robin
+    targets:
+      - target: service-1:3001
+        weight: 70       # 70%
+      - target: service-2:3002
+        weight: 30       # 30%
+
+# Exemplo 5: Canary deployment (99/1)
+upstreams:
+  - name: upstream-canary
+    algorithm: round-robin
+    targets:
+      - target: service-stable:3001
+        weight: 99       # 99%
+      - target: service-canary:3002
+        weight: 1        # 1%
+
+# Exemplo 6: Granularidade alta (mesmo que 70/30)
+upstreams:
+  - name: upstream-granular
+    algorithm: round-robin
+    targets:
+      - target: service-1:3001
+        weight: 700      # 70%
+      - target: service-2:3002
+        weight: 300      # 30%
