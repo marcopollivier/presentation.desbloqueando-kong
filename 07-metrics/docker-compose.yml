@@ -31,6 +31,7 @@ services:
     restart: unless-stopped
     networks:
       - kong-net
+      - mock-services-net
 
   prometheus:
     image: prom/prometheus:latest
@@ -53,6 +54,7 @@ services:
       - TZ=UTC
     networks:
       - kong-net
+      - mock-services-net
     restart: unless-stopped
 
   grafana:
@@ -83,3 +85,6 @@ volumes:
 networks:
   kong-net:
     driver: bridge
+  mock-services-net:
+    external: true
+    name: mock-services-net

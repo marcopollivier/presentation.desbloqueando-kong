@@ -1,30 +1,38 @@
-# Kong Gateway - Observability Demo 🚀
+# Kong Gateway - Metrics & Load Balancing Demo 🚀
 
 ## Visão Geral
 
-Demo completo do Kong Gateway com **Prometheus** e **Grafana** para visualização de métricas em tempo real. Perfeito para apresentações e demonstrações.
+Demo completo do Kong Gateway com **Prometheus**, **Grafana** e **Load Balancing** entre dois mock services locais. Demonstra métricas em tempo real e distribuição de carga entre serviços Go e Node.js.
 
 ## Stack Completa
 
 ```
-Client → Kong Gateway → JSONPlaceholder API
-           ↓ (metrics)
+Client → Kong Gateway ⟷ Go Mock API (3001)
+           ↓ (metrics)  ⟷ Node Mock API (3002)
         Prometheus → Grafana Dashboard
 ```
 
 ## 🚀 Quick Start
 
-### 1. Subir a Stack Completa
+### 1. Subir os Mock Services
 
 ```bash
-podman compose up -d
-# ou: docker-compose up -d
+cd ../00-mock-services
+make setup && make up
+cd ../07-metrics
 ```
 
-### 2. Executar Demo Interativo
+### 2. Subir a Stack de Métricas
 
 ```bash
-./presentation-demo.sh
+docker-compose up -d
+# ou: podman-compose up -d
+```
+
+### 3. Executar Teste de Carga
+
+```bash
+./load-test.sh
 ```
 
 ### 3. Acessar Dashboards
@@ -62,10 +70,17 @@ podman compose up -d
 
 ## 🔧 Configuração
 
+### Mock Services (00-mock-services/)
+- **Go Mock API**: Porta 3001 (alta performance)
+- **Node Mock API**: Porta 3002 (rico ecossistema)
+- Network externa para comunicação com Kong
+- Health checks configurados
+
 ### Kong (kong.yml)
-- Serviço JSONPlaceholder configurado
+- Upstream com round-robin entre os dois services
 - Plugin Prometheus habilitado globalmente
 - Métricas expostas na porta 8100
+- Health checks ativos para os targets
 
 ### Prometheus (prometheus/prometheus.yml)
 - Scraping Kong a cada 5 segundos
@@ -74,22 +89,24 @@ podman compose up -d
 ### Grafana
 - Dashboard auto-provisionado
 - Datasource Prometheus configurado
-- Painéis pré-configurados
+- Painéis pré-configurados para load balancing
 
 ## 🌐 Endpoints de Teste
 
 ```bash
-# GET requests (200)
-curl http://localhost:8000/api/posts
+# GET requests (200) - balanceados entre Go e Node
 curl http://localhost:8000/api/users
+curl http://localhost:8000/api/users/1
+curl http://localhost:8000/api/health
 
 # POST requests (201)
-curl -X POST http://localhost:8000/api/posts \
+curl -X POST http://localhost:8000/api/users \
   -H "Content-Type: application/json" \
-  -d '{"title":"Test","body":"Demo","userId":1}'
+  -d '{"name":"Test User","email":"test@example.com"}'
 
 # 404 errors
 curl http://localhost:8000/api/nonexistent
+curl http://localhost:8000/api/users/99999
 ```
 
 ## 🐛 Troubleshooting

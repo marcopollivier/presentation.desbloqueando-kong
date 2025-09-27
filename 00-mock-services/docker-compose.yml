@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Go Mock API 1 (Performance Leader)
+  go-mock-api-1:
+    build: ./go-mock-server
+    container_name: go-mock-api-1
+    environment:
+      - PORT=3001
+      - SERVER_NAME=go-mock-api-1
+    ports:
+      - "3001:3001"
+    networks:
+      - mock-services-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Node.js Mock API 2 (Ecosystem Rich)  
+  node-mock-api-2:
+    build: ./node-mock-server
+    container_name: node-mock-api-2
+    environment:
+      - PORT=3002
+      - SERVER_NAME=node-mock-api-2
+    ports:
+      - "3002:3002"
+    networks:
+      - mock-services-net
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3002/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  mock-services-net:
+    external: true
+    name: mock-services-net

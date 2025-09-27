@@ -1,0 +1,227 @@
+{
+  "id": null,
+  "uid": "mock-services-metrics",
+  "title": "Mock Services Load Balancing",
+  "tags": ["mock-services", "load-balancing", "kong"],
+  "style": "dark",
+  "timezone": "browser",
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requests per Service",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "targets": [
+        {
+          "expr": "go_mock_requests_total",
+          "refId": "A",
+          "legendFormat": "Go Mock API"
+        },
+        {
+          "expr": "node_mock_requests_total", 
+          "refId": "B",
+          "legendFormat": "Node Mock API"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Request Rate by Service",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "targets": [
+        {
+          "expr": "rate(go_mock_requests_total[1m])",
+          "refId": "A",
+          "legendFormat": "Go Mock API"
+        },
+        {
+          "expr": "rate(node_mock_requests_total[1m])",
+          "refId": "B", 
+          "legendFormat": "Node Mock API"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "title": "Service Distribution",
+      "type": "piechart",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "targets": [
+        {
+          "expr": "go_mock_requests_total",
+          "refId": "A",
+          "legendFormat": "Go Mock ({{server}})"
+        },
+        {
+          "expr": "node_mock_requests_total",
+          "refId": "B",
+          "legendFormat": "Node Mock ({{server}})"
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "visible",
+          "placement": "right"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 4,
+      "title": "Response Time Comparison",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "targets": [
+        {
+          "expr": "go_mock_response_time_ms",
+          "refId": "A",
+          "legendFormat": "Go Mock API"
+        },
+        {
+          "expr": "node_mock_response_time_ms",
+          "refId": "B",
+          "legendFormat": "Node Mock API"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    },
+    {
+      "id": 5,
+      "title": "Response Time Over Time",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "targets": [
+        {
+          "expr": "go_mock_response_time_ms",
+          "refId": "A",
+          "legendFormat": "Go Mock API"
+        },
+        {
+          "expr": "node_mock_response_time_ms",
+          "refId": "B",
+          "legendFormat": "Node Mock API"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "id": 6,
+      "title": "Service Uptime",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "targets": [
+        {
+          "expr": "go_mock_uptime_seconds/3600",
+          "refId": "A",
+          "legendFormat": "Go Mock Uptime (hours)"
+        },
+        {
+          "expr": "node_mock_uptime_seconds/3600",
+          "refId": "B",
+          "legendFormat": "Node Mock Uptime (hours)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      }
+    }
+  ]
+}

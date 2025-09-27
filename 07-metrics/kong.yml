@@ -1,21 +1,38 @@
 _format_version: "3.0"
 _transform: true
 
+# Upstream configuration for load balancing
+upstreams:
+  - name: mock-apis-upstream
+    algorithm: round-robin
+    healthchecks:
+      active:
+        http_path: /health
+        healthy:
+          interval: 30
+          http_statuses: [200, 302]
+        unhealthy:
+          http_statuses: [500, 502, 503, 504]
+    targets:
+      - target: go-mock-api-1:3001
+        weight: 100
+      - target: node-mock-api-2:3002
+        weight: 100
+
+# Service using the upstream
 services:
-  - name: jsonplaceholder-api
-    url: https://jsonplaceholder.typicode.com
-    protocol: https
-    host: jsonplaceholder.typicode.com
-    port: 443
-    path: /
+  - name: mock-apis-service
+    host: mock-apis-upstream
+    protocol: http
     connect_timeout: 60000
     write_timeout: 60000
     read_timeout: 60000
     retries: 5
 
+# Routes
 routes:
   - name: api-route
-    service: jsonplaceholder-api
+    service: mock-apis-service
     protocols:
       - http
       - https
@@ -30,6 +47,7 @@ routes:
     strip_path: true
     preserve_host: false
 
+# Prometheus plugin for metrics
 plugins:
   - name: prometheus
     config:
