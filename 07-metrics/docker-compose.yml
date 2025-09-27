@@ -3,7 +3,7 @@ version: '3.8'
 services:
   kong:
     image: kong:latest
-    container_name: kong-basic
+    container_name: kong-metrics
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /kong/kong.yml
