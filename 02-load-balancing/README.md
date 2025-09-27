@@ -1,8 +1,8 @@
-# 🔄 Projeto 4: Load Balancing + Laboratório Multi-Linguagem
+# 🔄 Load Balancing com Kong Gateway
 
 ## 🎯 Objetivos
-- Configurar Upstream com targets em **3 linguagens diferentes**
-- **Comparar performance** de Go, Node.js e Rust em tempo real
+- Configurar Upstream com targets em **Go e Node.js**
+- **Comparar performance** entre Go e Node.js em tempo real
 - Implementar algoritmos de load balancing
 - Configurar health checks ativos e passivos
 - Demonstrar failover automático
@@ -49,7 +49,7 @@
 
 ## 🚀 Como Executar
 
-### 1. Subir o ambiente (Kong + Go + Node.js + Rust)
+### 1. Subir o ambiente (Kong + Go + Node.js)
 
 ```bash
 docker compose up -d --build
@@ -191,27 +191,18 @@ Este projeto demonstra **comparação prática de performance** em um cenário r
 - **JavaScript isomórfico**: Mesma linguagem front e backend
 - **Performance**: ~8,000 req/s - adequado para maioria dos casos
 
-### 🦀 **Rust - O Extremo**
-
-- **Zero-cost abstractions**: Performance sem sacrifício de segurança
-- **Memory safety**: Sem garbage collector, controle total de memória
-- **Async/await**: Tokio runtime com concorrência massiva
-- **Performance**: ~30,000 req/s - ideal para sistemas críticos
-
 ### 📊 **Comparação Prática**
 
 ```bash
 # Performance comparison (requests/second)
 Node.js: ~8,000 req/s   (baseline)
 Go:     ~25,000 req/s   (3.1x faster)
-Rust:   ~30,000 req/s   (3.8x faster)
 ```
 
 ### 🎯 **Cenários de Uso**
 
 - **Go**: APIs corporativas, microservices, ferramentas DevOps
-- **Node.js**: Protótipos rápidos, full-stack JS, real-time applications  
-- **Rust**: Sistemas embarcados, blockchain, infraestrutura de alta performance
+- **Node.js**: Protótipos rápidos, full-stack JS, real-time applications
 
 > 💡 **Dica**: No load balancing, targets mais rápidos podem processar mais requests mesmo com peso igual, melhorando a performance geral do sistema.
 
