@@ -181,6 +181,14 @@ clean: ## Clean temporary files and caches
 	@find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 	@echo "$(GREEN)✅ Cleanup completed$(RESET)"
 
+clean-containers: ## Clean up Kong Workshop containers
+	@echo "$(YELLOW)🧹 Cleaning up Kong Workshop containers...$(RESET)"
+	@./cleanup-all-containers.sh
+
+kill-all: ## Remove ALL Docker containers (DESTRUCTIVE)
+	@echo "$(RED)💀 Killing ALL Docker containers...$(RESET)"
+	@./kill-all-containers.sh
+
 reset: clean down ## Full reset (clean + down)
 	@echo "$(CYAN)🔄 Full environment reset completed$(RESET)"
 
