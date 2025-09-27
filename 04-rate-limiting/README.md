@@ -1,21 +1,20 @@
-# Projeto 3: Rate Limiting e Controle de Tráfego
+# Projeto 4: Rate Limiting Básico
 
 ## 🎯 Objetivos
-- Implementar Rate Limiting por IP, Consumer e Header
-- Configurar diferentes janelas de tempo
+- Implementar Rate Limiting básico por IP
+- Configurar janelas de tempo simples
 - Demonstrar headers de rate limiting
-- Mostrar estratégias de controle de tráfego
+- Proteger APIs contra abuso
 
 ## 🏗️ Arquitetura
 ```
-Cliente → Kong (Rate Limit) → Mock API
+Cliente → Kong (Rate Limit) → JSONPlaceholder API
 ```
 
 ## 📋 Conceitos Apresentados
 - **Rate Limiting Plugin**: Controle por requests/minuto
-- **Request Size Limiting**: Limite de tamanho de payload
-- **Response Rate Limiting**: Limite de resposta upstream
-- **Estratégias**: cluster, redis, local
+- **Política Local**: Armazenamento em memória
+- **Headers informativos**: X-RateLimit-*
 
 ## 🚀 Como Executar
 
@@ -24,79 +23,58 @@ Cliente → Kong (Rate Limit) → Mock API
 docker-compose up -d
 ```
 
-### 2. Testar rate limiting básico
+### 2. Testar funcionamento normal
 ```bash
-# Execute múltiplas vezes rapidamente
+# Request simples para verificar que está funcionando
+curl -i http://localhost:8000/api/posts
+```
+
+### 3. Testar rate limiting
+```bash
+# Execute múltiplas vezes rapidamente para atingir o limite
 for i in {1..10}; do
-  curl -i http://localhost:8000/api/posts
-  sleep 0.1
+  echo "Request $i:"
+  curl -i http://localhost:8000/api/posts | head -1
+  sleep 0.5
 done
-# Após 5 requests, deve retornar 429 Too Many Requests
+# Após 5 requests no minuto, deve retornar 429 Too Many Requests
 ```
 
-### 3. Testar rate limiting por consumer
+### 4. Observar headers de rate limiting
 ```bash
-# Com consumer premium (limite maior)
-for i in {1..15}; do
-  curl -H "apikey: premium-key-456" -i http://localhost:8000/premium/posts
-  sleep 0.1
-done
-
-# Com consumer básico (limite menor)
-for i in {1..8}; do
-  curl -H "apikey: basic-key-123" -i http://localhost:8000/premium/posts
-  sleep 0.1
-done
+# Veja os headers informativos
+curl -v http://localhost:8000/api/posts 2>&1 | grep -E "X-RateLimit"
 ```
 
-### 4. Testar rate limiting por header personalizado
+### 5. Aguarde 1 minuto e teste novamente
 ```bash
-# Diferentes clientes baseado em header
-for i in {1..6}; do
-  curl -H "X-Client-ID: mobile-app" -i http://localhost:8000/client/posts
-  sleep 0.1
-done
-
-for i in {1..12}; do
-  curl -H "X-Client-ID: web-app" -i http://localhost:8000/client/posts
-  sleep 0.1
-done
-```
-
-### 5. Monitorar headers de rate limiting
-```bash
-# Observe os headers retornados
-curl -v http://localhost:8000/api/posts 2>&1 | grep -E "(X-RateLimit|429)"
-```
-
-### 6. Testar request size limiting
-```bash
-# Request muito grande (deve falhar)
-curl -X POST http://localhost:8000/size-limit/posts \
-  -H "Content-Type: application/json" \
-  -d '{"data": "'$(openssl rand -base64 2048)'"}'
+# Após 1 minuto, o limite deve ser resetado
+sleep 60
+curl -i http://localhost:8000/api/posts
 ```
 
 ## 📚 Pontos de Discussão
 
-1. **Estratégias de Rate Limiting**
-   - Por IP: Protege contra ataques
-   - Por Consumer: Planos diferenciados
-   - Por Header: Diferentes tipos de cliente
+1. **Rate Limiting por IP**
+   - Protege contra ataques de força bruta
+   - Identifica automaticamente pelo IP do cliente
+   - Simples de configurar e entender
 
-2. **Janelas de Tempo**
-   - second, minute, hour, day, month, year
-   - Sliding window vs Fixed window
+2. **Configuração de Janelas**
+   - `minute: 5` = 5 requests por minuto
+   - `hour: 100` = 100 requests por hora
+   - Controle duplo de limite
 
 3. **Headers de Resposta**
-   - X-RateLimit-Limit: Limite configurado
-   - X-RateLimit-Remaining: Requests restantes
-   - X-RateLimit-Reset: Quando o limite reseta
+   - `X-RateLimit-Limit-Minute`: Limite por minuto
+   - `X-RateLimit-Remaining-Minute`: Requests restantes
+   - `X-RateLimit-Limit-Hour`: Limite por hora
+   - `X-RateLimit-Remaining-Hour`: Requests restantes na hora
 
-4. **Estratégias de Armazenamento**
-   - local: Performance, mas não distribuído
-   - cluster: Distribuído entre nós Kong
-   - redis: External store, mais preciso
+4. **Política Local**
+   - `policy: local`: Armazena contadores em memória
+   - Mais rápido, mas não distribuído
+   - Ideal para single-node ou testes
 
 ## 🧹 Limpeza
 ```bash

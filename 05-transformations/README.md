@@ -12,55 +12,46 @@ Cliente → Kong (Transformers) → Mock API
 ```
 
 ## 📋 Conceitos Apresentados
-- **Request Transformer**: Modifica requests antes do upstream
-- **Response Transformer**: Modifica responses antes do cliente
-- **Correlation ID**: Rastreamento de requests
-- **Header Manipulation**: Adicionar/remover/substituir headers
+
+- **Request Transformer**: Enriquece requests com correlation ID
+- **Response Transformer**: Remove headers sensíveis das responses
+- **Correlation ID**: Rastreamento simples de requests
+- **Security Headers**: Limpeza de informações expostas
 
 ## 🚀 Como Executar
 
 ### 1. Subir o ambiente
+
 ```bash
 docker-compose up -d
 ```
 
-### 2. Testar transformações de request
+### 2. Testar as transformações
+
 ```bash
-# Request normal - observe headers adicionados
+# Observe o Correlation ID adicionado e headers de segurança removidos
 curl -v http://localhost:8000/api/posts/1
 
-# Request com header personalizado - será transformado
-curl -H "Client-Version: 1.0" -v http://localhost:8000/api/posts/1
-```
-
-### 3. Testar transformações de response
-```bash
-# Response será modificado com headers extras
-curl -i http://localhost:8000/api/posts/1
-
-# Testar com diferentes endpoints
+# Teste com diferentes endpoints
 curl -i http://localhost:8000/api/users/1
-```
-
-### 4. Ver logs para debugging
-```bash
-docker-compose logs kong | grep "correlation"
 ```
 
 ## 📚 Pontos de Discussão
 
-1. **Use Cases Comuns**
-   - API versioning através de headers
-   - Correlation IDs para tracing
-   - Sanitização de dados
-   - Enriquecimento de requests
+1. **Enriquecimento Simples**
+   - Correlation ID automático para rastreamento
+   - Header de identificação do gateway
 
-2. **Performance Considerations**
-   - Transformações são executadas a cada request
-   - Body transformations são mais custosas
-   - Cache quando possível
+2. **Segurança Básica**
+   - Remoção de headers que expõem informações do backend
+   - Limpeza automática de dados sensíveis
+
+3. **Observabilidade**
+   - Como correlation IDs ajudam no troubleshooting
+   - Identificação de requests processados pelo Kong
 
 ## 🧹 Limpeza
+
 ```bash
 docker-compose down -v
 ```

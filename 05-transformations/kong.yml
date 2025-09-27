@@ -4,10 +4,6 @@ _transform: true
 services:
   - name: jsonplaceholder-api
     url: https://jsonplaceholder.typicode.com
-    protocol: https
-    host: jsonplaceholder.typicode.com
-    port: 443
-    path: /
 
 routes:
   - name: transform-route
@@ -18,43 +14,37 @@ routes:
     strip_path: true
 
 plugins:
-  # Request Transformer - adiciona headers e correlation ID
+  # Correlation ID Plugin - gera ID único para request/response
+  - name: correlation-id
+    route: transform-route
+    config:
+      header_name: "X-Correlation-ID"
+      generator: "uuid"
+      echo_downstream: true
+      
+  # Request Transformer - adiciona headers extras
   - name: request-transformer
     route: transform-route
     config:
       add:
         headers:
-          - "X-Forwarded-By:Kong-Gateway"
-          - "X-API-Version:v1"
-          - "X-Correlation-ID:$(uuid)"
-        querystring:
-          - "source:kong"
-      replace:
-        headers:
-          - "User-Agent:Kong-Gateway/3.4"
-      append:
-        headers:
-          - "X-Request-Time:$(current_time)"
-      remove:
-        headers:
-          - "X-Internal-Header"
+          - "X-Gateway:Kong"
           
-  # Response Transformer - modifica responses
+  # Response Transformer - limpa headers sensíveis e marca processamento
   - name: response-transformer
     route: transform-route  
     config:
       add:
         headers:
-          - "X-Processed-By:Kong-Gateway"
-          - "X-Cache-Status:MISS"
-          - "X-Response-Time:$(current_time)"
-        json:
-          - "metadata.processed_at:$(current_time)"
-          - "metadata.server:kong"
-      replace:
-        headers:
-          - "Server:Kong-Gateway"
+          - "X-Processed-By:Marco-Ollivier"
       remove:
         headers:
           - "X-Powered-By"
-          - "X-RateLimit-Limit"
+          - "Server"
+          
+  # File Log - registra requests com correlation ID
+  - name: file-log
+    route: transform-route
+    config:
+      path: "/tmp/kong-requests.log"
+      reopen: true
