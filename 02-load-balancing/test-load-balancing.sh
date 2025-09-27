@@ -23,23 +23,29 @@ extract_language() {
     echo "$response" | jq -r '.language // "Go"' 2>/dev/null
 }
 
-echo "1️⃣  Verificando status dos serviços individuais:"
-echo "------------------------------------------------"
+echo "1️⃣  Verificando status do Kong e serviços centralizados:"
+echo "--------------------------------------------------------"
 
-echo -n "🐹 Go Service (porta 3001): "
-go_response=$(curl -s http://localhost:3001/health)
+echo -n "🌐 Kong Gateway (porta 8000): "
+kong_response=$(curl -s http://localhost:8001/status)
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Online${NC}"
 else
     echo -e "${RED}❌ Offline${NC}"
+    echo "❗ Execute os serviços mock centralizados primeiro:"
+    echo "   cd ../00-mock-services && docker compose up -d"
+    exit 1
 fi
 
-echo -n "🟨 Node.js Service (porta 3002): "
-node_response=$(curl -s http://localhost:3002/health)
+echo -n "� Serviços Mock (através do Kong): "
+test_response=$(curl -s http://localhost:8000/api/health)
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Online${NC}"
 else
     echo -e "${RED}❌ Offline${NC}"
+    echo "❗ Verifique se os serviços centralizados estão rodando:"
+    echo "   cd ../00-mock-services && docker compose ps"
+    exit 1
 fi
 
 echo ""

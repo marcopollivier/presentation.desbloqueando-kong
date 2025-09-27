@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   kong:
     image: kong:latest
@@ -27,45 +25,8 @@ services:
       retries: 3
     restart: unless-stopped
     networks:
-      - kong-net
-    depends_on:
-      - go-mock-api-1
-      - node-mock-api-2
-
-  # Go Mock API 1 (Performance Leader)
-  go-mock-api-1:
-    build: ./go-mock-server
-    container_name: go-mock-api-1
-    environment:
-      - PORT=3001
-      - SERVER_NAME=go-mock-api-1
-    ports:
-      - "3001:3001"
-    networks:
-      - kong-net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Node.js Mock API 2 (Ecosystem Rich)  
-  node-mock-api-2:
-    build: ./node-mock-server
-    container_name: node-mock-api-2
-    environment:
-      - PORT=3002
-      - SERVER_NAME=node-mock-api-2
-    ports:
-      - "3002:3002"
-    networks:
-      - kong-net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - mock-services-net
 
 networks:
-  kong-net:
-    driver: bridge
+  mock-services-net:
+    external: true

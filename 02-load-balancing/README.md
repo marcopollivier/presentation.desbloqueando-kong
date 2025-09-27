@@ -8,24 +8,28 @@
 - Demonstrar failover automático
 - **Benchmarking** comparativo entre as linguagens
 
-## 🏗️ Arquitetura Go vs Node.js
+## 🏗️ Arquitetura com Serviços Centralizados
 
 ```
-                             Kong Gateway
-                         ┌─────────────────┐
-                         │   Load Balancer │
-                         │   (Round Robin) │
-                         └─────────┬───────┘
-                                   │
-                       ┌───────────┼───────────┐
-                       │           │           │
-             ┌─────────▼─────────┐ │ ┌─────────▼─────────┐
-             │   🐹 Go API-1     │ │ │🟨 Node.js API-2   │
-             │   (Goroutines)    │ │ │  (Event Loop)     │
-             │   ~25k req/s      │ │ │   ~8k req/s       │
-             │   Port: 3001      │ │ │   Port: 3002      │
-             └───────────────────┘ │ └───────────────────┘
-                                   │
+                             Kong Gateway (02-load-balancing)
+                         ┌─────────────────────────────────┐
+                         │        Load Balancer            │
+                         │        (Round Robin)            │
+                         └─────────────┬───────────────────┘
+                                       │
+                                       │ External Network
+                                       │ mock-services-net
+                                       │
+                   ┌───────────────────┼───────────────────┐
+                   │                   │                   │
+         ┌─────────▼─────────┐         │         ┌─────────▼─────────┐
+         │   🐹 Go API-1     │         │         │🟨 Node.js API-2   │
+         │   (Goroutines)    │         │         │  (Event Loop)     │
+         │   ~25k req/s      │         │         │   ~8k req/s       │
+         │   Port: 3001      │         │         │   Port: 3002      │
+         └───────────────────┘         │         └───────────────────┘
+                                       │
+              Centralized Mock Services (00-mock-services/)
                           Performance Battle!
 ```
 
@@ -47,12 +51,35 @@
 - **Failover**: Recuperação automática de targets
 - **Performance Comparison**: Benchmarks em tempo real
 
-## 🚀 Como Executar
+## � Pré-requisitos
 
-### 1. Subir o ambiente (Kong + Go + Node.js)
+Este exemplo utiliza os **serviços mock centralizados** do diretório `00-mock-services/`.
+
+### 1. Subir os serviços mock centralizados PRIMEIRO
 
 ```bash
-docker compose up -d --build
+cd ../00-mock-services
+docker compose up -d
+```
+
+### 2. Verificar se os serviços estão rodando
+
+```bash
+# Verificar containers
+docker compose ps
+
+# Testar conectividade
+curl http://localhost:3001/health  # Go Mock API
+curl http://localhost:3002/health  # Node Mock API
+```
+
+## 🚀 Como Executar
+
+### 3. Subir o Kong para load balancing
+
+```bash
+cd ../02-load-balancing
+docker compose up -d
 ```
 ```
 
