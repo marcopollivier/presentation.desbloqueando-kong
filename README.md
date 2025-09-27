@@ -1,6 +1,35 @@
 # 🌟 Kong Gateway Workshop - Projetos Evolutivos
 
-Este workshop apresenta Kong Gateway através de projetos progressivos, desde conceitos fundamentais até plugins avançados multi-linguagem.
+Este workshop apresenta Kong Gateway através de projetos prog## 🛠️ Ferramentas de Desenvolvimento
+
+## Scripts de Limpeza Docker
+
+O projeto inclui scripts para gerenciar containers Docker:
+
+```bash
+# Limpeza segura dos containers do workshop
+./cleanup-all-containers.sh        # Com confirmação
+./cleanup-all-containers.sh --force # Sem confirmação
+make clean-containers               # Via Makefile
+
+# Limpeza TOTAL de containers (cuidado!)
+./kill-all-containers.sh           # Remove TODOS containers
+make kill-all                       # Via Makefile
+
+# Limpeza legacy
+./docker-cleanup.sh                # Script original (mantido para compatibilidade)
+```
+
+## Comandos Make Disponíveis
+
+```bash
+make help              # Lista todos os comandos
+make up                # Sobe todos os projetos
+make down              # Para todos os projetos  
+make clean-containers  # Limpa containers do workshop
+make kill-all          # Remove TODOS containers (CUIDADO!)
+make test              # Roda testes de todos projetos
+``` conceitos fundamentais até plugins avançados multi-linguagem.
 
 ## 🎯 Visão Geral
 
