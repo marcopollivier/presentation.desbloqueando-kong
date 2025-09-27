@@ -43,6 +43,7 @@ var (
 	startTime      = time.Now()
 	requestCount   int64
 	totalLatencyMs int64
+	totalLatencyNs int64
 )
 
 // Mock data
@@ -97,7 +98,7 @@ func corsAndLoggingMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 		// Medir tempo de resposta
-		startTime := time.Now()
+		requestStartTime := time.Now()
 
 		// Incrementar contador de requests (exceto OPTIONS e metrics)
 		if r.Method != "OPTIONS" && r.URL.Path != "/metrics" {
@@ -117,8 +118,11 @@ func corsAndLoggingMiddleware(next http.Handler) http.Handler {
 
 		// Calcular e adicionar latência (exceto OPTIONS e metrics)
 		if r.Method != "OPTIONS" && r.URL.Path != "/metrics" {
-			latencyMs := time.Since(startTime).Milliseconds()
+			duration := time.Since(requestStartTime)
+			latencyMs := duration.Milliseconds()
+			latencyNs := duration.Nanoseconds()
 			atomic.AddInt64(&totalLatencyMs, latencyMs)
+			atomic.AddInt64(&totalLatencyNs, latencyNs)
 		}
 	})
 }
@@ -218,12 +222,14 @@ func performanceHandler(w http.ResponseWriter, r *http.Request) {
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	uptime := time.Since(startTime).Seconds()
 	requests := atomic.LoadInt64(&requestCount)
-	totalLatency := atomic.LoadInt64(&totalLatencyMs)
+	totalLatencyMs := atomic.LoadInt64(&totalLatencyMs)
+	totalLatencyNs := atomic.LoadInt64(&totalLatencyNs)
 
-	// Calcular latência média
-	var avgLatency float64
+	// Calcular latência média em ms e ns
+	var avgLatencyMs, avgLatencyNs float64
 	if requests > 0 {
-		avgLatency = float64(totalLatency) / float64(requests)
+		avgLatencyMs = float64(totalLatencyMs) / float64(requests)
+		avgLatencyNs = float64(totalLatencyNs) / float64(requests)
 	}
 
 	w.Header().Set("Content-Type", "text/plain")
@@ -240,7 +246,11 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("# HELP go_mock_response_time_ms Average response time in milliseconds\n"))
 	w.Write([]byte("# TYPE go_mock_response_time_ms gauge\n"))
-	w.Write([]byte(fmt.Sprintf("go_mock_response_time_ms{server=\"%s\",language=\"go\"} %.2f\n", serverName, avgLatency)))
+	w.Write([]byte(fmt.Sprintf("go_mock_response_time_ms{server=\"%s\",language=\"go\"} %.2f\n", serverName, avgLatencyMs)))
+
+	w.Write([]byte("# HELP go_mock_response_time_ns Average response time in nanoseconds\n"))
+	w.Write([]byte("# TYPE go_mock_response_time_ns gauge\n"))
+	w.Write([]byte(fmt.Sprintf("go_mock_response_time_ns{server=\"%s\",language=\"go\"} %.0f\n", serverName, avgLatencyNs)))
 }
 
 func main() {
