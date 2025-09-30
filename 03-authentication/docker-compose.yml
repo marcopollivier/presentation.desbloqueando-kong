@@ -27,8 +27,8 @@ services:
       retries: 3
     restart: unless-stopped
     networks:
-      - kong-net
+      - kong-shared
 
 networks:
-  kong-net:
-    driver: bridge
+  kong-shared:
+    external: true

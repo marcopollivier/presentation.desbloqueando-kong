@@ -30,8 +30,7 @@ services:
       retries: 3
     restart: unless-stopped
     networks:
-      - kong-net
-      - mock-services-net
+      - kong-shared
 
   prometheus:
     image: prom/prometheus:latest
@@ -53,8 +52,7 @@ services:
     environment:
       - TZ=UTC
     networks:
-      - kong-net
-      - mock-services-net
+      - kong-shared
     restart: unless-stopped
 
   grafana:
@@ -73,7 +71,7 @@ services:
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     networks:
-      - kong-net
+      - kong-shared
     restart: unless-stopped
     depends_on:
       - prometheus
@@ -83,8 +81,5 @@ volumes:
   grafana_data:
 
 networks:
-  kong-net:
-    driver: bridge
-  mock-services-net:
+  kong-shared:
     external: true
-    name: mock-services-net

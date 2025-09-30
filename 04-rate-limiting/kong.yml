@@ -3,11 +3,11 @@ _transform: true
 
 # Services
 services:
-  - name: jsonplaceholder-api
-    url: https://jsonplaceholder.typicode.com
-    protocol: https
-    host: jsonplaceholder.typicode.com
-    port: 443
+  - name: go-mock-api
+    url: http://go-mock-api-1:3001
+    protocol: http
+    host: go-mock-api-1
+    port: 3001
     path: /
     connect_timeout: 60000
     write_timeout: 60000
@@ -16,8 +16,8 @@ services:
 
 # Routes  
 routes:
-  - name: api-with-rate-limit
-    service: jsonplaceholder-api
+  - name: api-route
+    service: go-mock-api
     protocols: [http, https]
     methods: [GET, POST]
     paths: [/api]
@@ -28,7 +28,7 @@ routes:
 plugins:
   # Rate limiting (5 req/min, 100 req/hour)
   - name: rate-limiting
-    route: api-with-rate-limit
+    route: api-route
     config:
       minute: 5
       hour: 100

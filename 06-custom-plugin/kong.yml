@@ -2,11 +2,11 @@ _format_version: "3.0"
 _transform: true
 
 services:
-  - name: jsonplaceholder-api
-    url: https://jsonplaceholder.typicode.com
-    protocol: https
-    host: jsonplaceholder.typicode.com
-    port: 443
+  - name: go-mock-api
+    url: http://go-mock-api-1:3001
+    protocol: http
+    host: go-mock-api-1
+    port: 3001
     path: /
     connect_timeout: 60000
     write_timeout: 60000
@@ -15,7 +15,7 @@ services:
 
 routes:
   - name: api-route
-    service: jsonplaceholder-api
+    service: go-mock-api
     protocols: [http, https]
     methods: [GET, POST, PUT, PATCH, DELETE]
     paths: [/api]

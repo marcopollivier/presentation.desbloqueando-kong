@@ -12,8 +12,8 @@ consumers:
   
 # Service apontando para JSONPlaceholder  
 services:
-  - name: jsonplaceholder-api
-    url: https://jsonplaceholder.typicode.com
+  - name: go-mock-api
+    url: http://go-mock-api-1:3001
     connect_timeout: 60000
     write_timeout: 60000
     read_timeout: 60000
@@ -22,7 +22,7 @@ services:
 # Route protegido com JWT - usando path simples
 routes:
   - name: jwt-posts
-    service: jsonplaceholder-api
+    service: go-mock-api
     protocols:
       - http
       - https
@@ -34,7 +34,7 @@ routes:
     preserve_host: false
     
   - name: jwt-users
-    service: jsonplaceholder-api
+    service: go-mock-api
     protocols:
       - http
       - https
@@ -48,7 +48,7 @@ routes:
 # Plugin JWT aplicado globalmente no service
 plugins:
   - name: jwt
-    service: jsonplaceholder-api
+    service: go-mock-api
     config:
       key_claim_name: iss
       secret_is_base64: false

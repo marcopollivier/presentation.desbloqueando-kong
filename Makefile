@@ -14,6 +14,16 @@ help: ## Mostra os comandos disponíveis
 	@echo "  make down  Para todos os projetos"
 	@echo ""
 
+00: ## Inicia os mock services
+	@echo "Criando rede kong-shared se não existir..."
+	@docker network create kong-shared 2>/dev/null || true
+	@echo "Subindo mock services..."
+	cd 00-mock-services && docker compose up -d
+	@echo "Conectando mocks à rede kong-shared..."
+	@docker network connect kong-shared go-mock-api-1 2>/dev/null || true
+	@docker network connect kong-shared node-mock-api-2 2>/dev/null || true
+	@echo "✅ Mock services prontos!"
+
 01: ## Roda o projeto 01-basic-proxy
 	cd 01-basic-proxy && docker compose up
 

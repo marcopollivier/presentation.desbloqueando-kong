@@ -18,8 +18,8 @@ services:
       - "8000:8000"
       - "8001:8001"
     networks:
-      - kong-net
+      - kong-shared
 
 networks:
-  kong-net:
-    driver: bridge
+  kong-shared:
+    external: true

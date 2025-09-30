@@ -12,6 +12,7 @@ services:
       - "3001:3001"
     networks:
       - mock-services-net
+      - kong-shared
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
@@ -30,6 +31,7 @@ services:
       - "3002:3002"
     networks:
       - mock-services-net
+      - kong-shared
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3002/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
       interval: 30s
@@ -39,5 +41,7 @@ services:
 
 networks:
   mock-services-net:
+    external: true
+  kong-shared:
     external: true
     name: mock-services-net
