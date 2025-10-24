@@ -122,3 +122,4 @@ out/
 #####################
 .cache/
 .parcel-cache/
+00-mock-services/go-mock-server/go-mock-server
