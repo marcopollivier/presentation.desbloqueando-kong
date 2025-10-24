@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Go Mock API 1 (Performance Leader)
   go-mock-api-1:
