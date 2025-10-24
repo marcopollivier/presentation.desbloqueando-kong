@@ -1,16 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
 // Estruturas de dados similar ao JSONPlaceholder
@@ -38,12 +42,15 @@ type HealthStatus struct {
 }
 
 var (
-	serverName     string
-	port           string
-	startTime      = time.Now()
-	requestCount   int64
-	totalLatencyMs int64
-	totalLatencyNs int64
+	serverName string
+	port       string
+	startTime  = time.Now()
+
+	// OpenTelemetry metrics
+	requestCounter metric.Int64Counter
+	responseTime   metric.Float64Histogram
+	uptimeGauge    metric.Float64ObservableGauge
+	promExporter   *prometheus.Exporter
 )
 
 // Mock data
@@ -56,6 +63,62 @@ var posts = []Post{
 var users = []User{
 	{ID: 1, Name: "John Doe", Email: "john@example.com", Username: "johndoe"},
 	{ID: 2, Name: "Jane Smith", Email: "jane@example.com", Username: "janesmith"},
+}
+
+// Inicializar OpenTelemetry
+func initMetrics() {
+	var err error
+
+	// Criar exporter Prometheus
+	promExporter, err = prometheus.New()
+	if err != nil {
+		log.Fatalf("Failed to create Prometheus exporter: %v", err)
+	}
+
+	// Criar provider de métricas
+	provider := sdkmetric.NewMeterProvider(sdkmetric.WithReader(promExporter))
+	otel.SetMeterProvider(provider)
+
+	// Criar meter
+	meter := otel.Meter("go-mock-server")
+
+	// Criar métricas
+	requestCounter, err = meter.Int64Counter(
+		"go_mock_requests_total",
+		metric.WithDescription("Total number of requests handled by Go mock service"),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create request counter: %v", err)
+	}
+
+	responseTime, err = meter.Float64Histogram(
+		"go_mock_response_time_ms",
+		metric.WithDescription("Response time in milliseconds"),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create response time histogram: %v", err)
+	}
+
+	uptimeGauge, err = meter.Float64ObservableGauge(
+		"go_mock_uptime_seconds",
+		metric.WithDescription("Uptime of the Go mock service in seconds"),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create uptime gauge: %v", err)
+	}
+
+	// Registrar callback para uptime
+	_, err = meter.RegisterCallback(
+		func(ctx context.Context, o metric.Observer) error {
+			uptime := time.Since(startTime).Seconds()
+			o.ObserveFloat64(uptimeGauge, uptime, metric.WithAttributes())
+			return nil
+		},
+		uptimeGauge,
+	)
+	if err != nil {
+		log.Fatalf("Failed to register uptime callback: %v", err)
+	}
 }
 
 func addServerInfo(data interface{}) interface{} {
@@ -89,7 +152,7 @@ func addServerInfo(data interface{}) interface{} {
 	}
 }
 
-// CORS e logging middleware
+// CORS e logging middleware com OpenTelemetry
 func corsAndLoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Headers CORS
@@ -99,11 +162,6 @@ func corsAndLoggingMiddleware(next http.Handler) http.Handler {
 
 		// Medir tempo de resposta
 		requestStartTime := time.Now()
-
-		// Incrementar contador de requests (exceto OPTIONS e metrics)
-		if r.Method != "OPTIONS" && r.URL.Path != "/metrics" {
-			atomic.AddInt64(&requestCount, 1)
-		}
 
 		// Log da requisição
 		log.Printf("[%s] %s %s from %s", serverName, r.Method, r.URL.Path, r.RemoteAddr)
@@ -116,13 +174,16 @@ func corsAndLoggingMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 
-		// Calcular e adicionar latência (exceto OPTIONS e metrics)
-		if r.Method != "OPTIONS" && r.URL.Path != "/metrics" {
+		// Registrar métricas (exceto para /metrics)
+		if r.URL.Path != "/metrics" {
+			ctx := context.Background()
+
+			// Incrementar contador de requests
+			requestCounter.Add(ctx, 1, metric.WithAttributes())
+
+			// Registrar tempo de resposta
 			duration := time.Since(requestStartTime)
-			latencyMs := duration.Milliseconds()
-			latencyNs := duration.Nanoseconds()
-			atomic.AddInt64(&totalLatencyMs, latencyMs)
-			atomic.AddInt64(&totalLatencyNs, latencyNs)
+			responseTime.Record(ctx, float64(duration.Milliseconds()), metric.WithAttributes())
 		}
 	})
 }
@@ -218,39 +279,9 @@ func performanceHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Metrics endpoint - formato Prometheus
+// Metrics endpoint - OpenTelemetry Prometheus
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
-	uptime := time.Since(startTime).Seconds()
-	requests := atomic.LoadInt64(&requestCount)
-	totalLatencyMs := atomic.LoadInt64(&totalLatencyMs)
-	totalLatencyNs := atomic.LoadInt64(&totalLatencyNs)
-
-	// Calcular latência média em ms e ns
-	var avgLatencyMs, avgLatencyNs float64
-	if requests > 0 {
-		avgLatencyMs = float64(totalLatencyMs) / float64(requests)
-		avgLatencyNs = float64(totalLatencyNs) / float64(requests)
-	}
-
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-
-	// Formato Prometheus
-	w.Write([]byte("# HELP go_mock_requests_total Total number of requests handled by Go mock service\n"))
-	w.Write([]byte("# TYPE go_mock_requests_total counter\n"))
-	w.Write([]byte(fmt.Sprintf("go_mock_requests_total{server=\"%s\",language=\"go\"} %d\n", serverName, requests)))
-
-	w.Write([]byte("# HELP go_mock_uptime_seconds Uptime of the Go mock service in seconds\n"))
-	w.Write([]byte("# TYPE go_mock_uptime_seconds gauge\n"))
-	w.Write([]byte(fmt.Sprintf("go_mock_uptime_seconds{server=\"%s\",language=\"go\"} %.2f\n", serverName, uptime)))
-
-	w.Write([]byte("# HELP go_mock_response_time_ms Average response time in milliseconds\n"))
-	w.Write([]byte("# TYPE go_mock_response_time_ms gauge\n"))
-	w.Write([]byte(fmt.Sprintf("go_mock_response_time_ms{server=\"%s\",language=\"go\"} %.2f\n", serverName, avgLatencyMs)))
-
-	w.Write([]byte("# HELP go_mock_response_time_ns Average response time in nanoseconds\n"))
-	w.Write([]byte("# TYPE go_mock_response_time_ns gauge\n"))
-	w.Write([]byte(fmt.Sprintf("go_mock_response_time_ns{server=\"%s\",language=\"go\"} %.0f\n", serverName, avgLatencyNs)))
+	promhttp.Handler().ServeHTTP(w, r)
 }
 
 func main() {
@@ -264,6 +295,9 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
+	// Inicializar OpenTelemetry
+	initMetrics()
 
 	// Criar router
 	r := mux.NewRouter()
@@ -292,6 +326,7 @@ func main() {
 	log.Printf("🚀 Go Mock API Server \"%s\" starting on port %s", serverName, port)
 	log.Printf("Health check: http://localhost:%s/health", port)
 	log.Printf("Performance test: http://localhost:%s/performance", port)
+	log.Printf("Metrics: http://localhost:%s/metrics", port)
 
 	// Graceful shutdown
 	go func() {
